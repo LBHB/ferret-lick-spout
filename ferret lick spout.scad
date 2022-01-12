@@ -169,19 +169,13 @@ difference() {
         // make the cut-out for the drain
         translate([0, nose_poke_width/2+wall_thickness, -0.1]) {
             hull() {
-                cylinder(h=0.1, d=10);
-                translate([0, -8.5, nose_poke_depth-lick_spout_depth*0.25]) {
-                    cylinder(h=0.1, d=6.5);
+                cylinder(h=0.1, d=12);
+                    translate([0, -6.5, nose_poke_depth-lick_spout_depth + lick_spout_depth]) {
+                    // front part of lick spout drain
+                    scale([1, 1, 3 ]) rotate([90, 0, 0]) cylinder(h=0.1, d=6.5);
                 }
             }
         }
         
-        translate([0, 20, 17.5]) {
-            rotate([90, 0, 0]) {
-                scale([1, 2, 1]) {
-                    cylinder(h=7, d=7.5);
-                }
-            }
-        }
     }
 }
