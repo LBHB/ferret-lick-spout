@@ -165,17 +165,14 @@ difference() {
                 );
             }
         }
-        
+
         // make the cut-out for the drain
-        translate([0, nose_poke_width/2+wall_thickness, -0.1]) {
-            hull() {
-                cylinder(h=0.1, d=12);
-                    translate([0, -6.5, nose_poke_depth-lick_spout_depth + lick_spout_depth]) {
-                    // front part of lick spout drain
-                    scale([1, 1, 3 ]) rotate([90, 0, 0]) cylinder(h=0.1, d=6.5);
-                }
-            }
+        drain_z = nose_poke_depth - lick_spout_depth;
+        drain_y = drain_z * tan(nose_poke_angle) + nose_poke_width * 0.5 - wall_thickness + 2;
+        translate([0, drain_y, drain_z]) rotate([90, 0, 0]) cylinder(h=4, d=6.5, center=false);
+        hull() {
+            translate([0, drain_y, drain_z]) rotate([90, 0, 0]) cylinder(h=0.1, d=6.5);
+            translate([0, nose_poke_width/2+wall_thickness, -0.1]) cylinder(h=0.1, d=12);
         }
-        
     }
 }
