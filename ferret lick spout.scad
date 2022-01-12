@@ -88,6 +88,18 @@ module WaterDrain(nose_poke_depth, nose_poke_radius, wall_thickness, lick_spout_
     }
 }
 
+module Mount(nose_poke_width, support_diameter, wall_thickness, tap_size_quarter_inch) {
+    mount_depth = support_diameter + wall_thickness;
+    mount_thickness = tap_size_quarter_inch + wall_thickness;
+
+    translate([nose_poke_width * 0.5 - mount_depth, -nose_poke_width * 0.5, -mount_depth]) 
+    difference () {
+        cube([mount_depth, mount_thickness, mount_depth]);
+        translate([mount_depth * 0.5, mount_thickness+0.1, mount_depth * 0.5]) rotate([90, 0, 0]) cylinder(h=mount_thickness+0.2, d=support_diameter);
+        translate([mount_depth * 0.5, mount_thickness * 0.5, -0.1]) cylinder(h=wall_thickness+0.2, d=tap_size_quarter_inch);
+    }
+}
+
 module AnglePoke(nose_poke_angle) {
     s = tan(nose_poke_angle);
     angle_matrix = [
@@ -100,10 +112,10 @@ module AnglePoke(nose_poke_angle) {
     }
 }
 
-
+// UNITS ARE IN MM
 nose_poke_depth = 35;
-nose_poke_width = 35;
-ir_sensor_depth = 3.7;
+nose_poke_width = 40;
+ir_sensor_depth = 3;
 wall_thickness = 6;
 lick_spout_od = 6;
 lick_spout_id = 2;
@@ -112,14 +124,17 @@ nose_poke_angle = 15;
 tap_size_quarter_inch = 5.558; // mm
 ir_sensor_width = 3.7;
 
+eps = 0.3;
+support_diameter = 12.7 + eps * 2;
 
+Mount(nose_poke_width, support_diameter, wall_thickness, tap_size_quarter_inch);
 difference() {
     difference() {
         AnglePoke(nose_poke_angle) {
             difference() {
                 union() {
                     MainWall(nose_poke_depth, wall_thickness);
-                    LickSpout(nose_poke_depth, lick_spout_depth, lick_spout_od, lick_spout_id);
+					LickSpout(nose_poke_depth, lick_spout_depth, lick_spout_od, lick_spout_id);
                     translate([0, nose_poke_width/2+wall_thickness, 0]) {
                         hull() {
                             translate([-7.5, -7.5, 0]) {
@@ -142,15 +157,7 @@ difference() {
                 }
             }
         }
-        
-        translate([nose_poke_width/4, -7.5, -0.1]) {
-           cylinder(h=wall_thickness+0.2, d=tap_size_quarter_inch);
-        }
-        
-        translate([-nose_poke_width/4, -7.5, -0.1]) {
-           cylinder(h=wall_thickness+0.2, d=tap_size_quarter_inch);
-        }
-        
+             
         translate([nose_poke_width/2-0.75, 10, -0.1]) {
             rotate([0, 0, 90]) {
                 IRSensorHousing(
@@ -176,3 +183,4 @@ difference() {
         }
     }
 }
+
