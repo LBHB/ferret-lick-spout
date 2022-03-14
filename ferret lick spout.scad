@@ -35,13 +35,12 @@ module IRSensorHousing(
 }
 
 
-
 module MainWall(nose_poke_depth, wall_thickness) {
     translate([0, 0, nose_poke_depth/2]) {
         difference() {
             cube(size=[nose_poke_width, nose_poke_width, nose_poke_depth], center=true);
             union() {
-                translate([0, -wall_thickness, wall_thickness]) {
+                translate([0, 0.1, wall_thickness]) {
                     cube(size=[nose_poke_width-wall_thickness*2, nose_poke_width, nose_poke_depth], center=true);
                 }
                 translate([.1, -nose_poke_width/2+wall_thickness, wall_thickness]) {
@@ -112,13 +111,40 @@ module AnglePoke(nose_poke_angle) {
     }
 }
 
+
+module Drain(nose_poke_depth, nose_poke_width, wall_thickness) {
+    back_scale = 1.5;
+    m = [[  1, 0.2,  0,  0 ],
+         [  0,   1,  0,  0 ],
+         [  0,   0,  1,  0 ],
+         [  0,   0,  0,  1 ]];
+    translate([0, 0, -nose_poke_depth]) 
+    difference() {
+        union() {
+            hull() {
+                translate([0, wall_thickness, 0]) rotate([90, 0, 0]) cylinder(h=wall_thickness, d=nose_poke_width);
+
+                translate([0, 0, nose_poke_depth]) multmatrix(m) scale([1, back_scale, 1]) cylinder(h=0.1, d=nose_poke_width);
+            }
+        }
+        union() {
+            hull() {
+                translate([0, wall_thickness, 0]) rotate([90, 0, 0]) cylinder(h=wall_thickness, d=nose_poke_width-wall_thickness*2);
+                translate([0, 0, nose_poke_depth+eps]) multmatrix(m) scale([1, back_scale*1.2, 1]) cylinder(h=0.1, d=nose_poke_width-wall_thickness*2);
+            }
+        }
+        translate([-nose_poke_width, -nose_poke_depth*2, -nose_poke_depth]) 
+            cube(size=[nose_poke_width*2, nose_poke_depth*2, nose_poke_width*2]);
+    }
+}
+
 // UNITS ARE IN MM
 nose_poke_depth = 35;
 nose_poke_width = 40;
 ir_sensor_depth = 3;
 wall_thickness = 6;
-lick_spout_od = 6;
-lick_spout_id = 2;
+lick_spout_od = 8;
+lick_spout_id = 3;
 lick_spout_depth = 5;
 nose_poke_angle = 15;
 tap_size_quarter_inch = 5.558; // mm
@@ -135,27 +161,20 @@ difference() {
                 union() {
                     MainWall(nose_poke_depth, wall_thickness);
 					LickSpout(nose_poke_depth, lick_spout_depth, lick_spout_od, lick_spout_id);
-                    translate([0, nose_poke_width/2+wall_thickness, 0]) {
-                        hull() {
-                            translate([-7.5, -7.5, 0]) {
-                                cube([15, 15, 0.1]);
-                            }
-                            translate([-2.5, -10, nose_poke_depth-.1]) {
-                                cube([5, 5, 0.1]);
-                            }
-                        }
-                    }
                     hull() {
                           cylinder(h=0.1, d=5);
-                        translate([0, 0, -10]) {
-                            cylinder(h=0.1, d=lick_spout_id+0.7*2);
+                          translate([0, 0, -10]) {
+                          cylinder(h=0.1, d=lick_spout_id+0.7*2);
                         }
                     }
                 }
+                // This is a second cylinder to ream out additional issues with lick spout
                 translate([0, 0, -20]) {
                     cylinder(h=nose_poke_depth+20, d=lick_spout_id);
                 }
             }
+            translate([0, nose_poke_width/2, 0]) rotate([0, 180, 0]) Drain(nose_poke_depth, nose_poke_width, wall_thickness);
+
         }
              
         translate([nose_poke_width/2-0.75, 10, -0.1]) {
@@ -171,15 +190,6 @@ difference() {
                     ir_sensor_height=nose_poke_depth-ir_sensor_depth+0.1, width=ir_sensor_width
                 );
             }
-        }
-
-        // make the cut-out for the drain
-        drain_z = nose_poke_depth - lick_spout_depth;
-        drain_y = drain_z * tan(nose_poke_angle) + nose_poke_width * 0.5 - wall_thickness + 2;
-        translate([0, drain_y, drain_z]) rotate([90, 0, 0]) cylinder(h=4, d=6.5, center=false);
-        hull() {
-            translate([0, drain_y, drain_z]) rotate([90, 0, 0]) cylinder(h=0.1, d=6.5);
-            translate([0, nose_poke_width/2+wall_thickness, -0.1]) cylinder(h=0.1, d=12);
         }
     }
 }
