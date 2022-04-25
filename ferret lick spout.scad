@@ -158,11 +158,11 @@ nose_poke_depth = 35;
 nose_poke_width = 40;
 nose_poke_height = 10;
 
-ir_sensor_depth = 3;
+ir_sensor_depth = 3.7;
 wall_thickness = 6;
 lick_spout_od = 8;
 lick_spout_id = 3;
-lick_spout_depth = 6;
+lick_spout_depth = 10;
 nose_poke_angle = 15;
 tap_size_quarter_inch = 5.558; // mm
 ir_sensor_width = 3.7;
