@@ -43,8 +43,11 @@ module MainWall(nose_poke_depth, wall_thickness) {
                 translate([0, 0.1, wall_thickness]) {
                     cube(size=[nose_poke_width-wall_thickness*2, nose_poke_width, nose_poke_depth], center=true);
                 }
-                translate([.1, -nose_poke_width/2+wall_thickness, wall_thickness]) {
+                translate([.1, -nose_poke_width/2+wall_thickness*2-nose_poke_height, wall_thickness]) {
                     cube(size=[nose_poke_width+.4, nose_poke_width/2, nose_poke_depth], center=true);
+                }
+                translate([.1, nose_poke_width/2-wall_thickness, wall_thickness]) {
+                    cube(size=[nose_poke_width+.4, nose_poke_width/2-nose_poke_height+2, nose_poke_depth], center=true);
                 }
             }
         }
@@ -91,7 +94,7 @@ module Mount(nose_poke_width, support_diameter, wall_thickness, tap_size_quarter
     mount_depth = support_diameter + wall_thickness;
     mount_thickness = tap_size_quarter_inch + wall_thickness;
 
-    translate([nose_poke_width * 0.5 - mount_depth, -nose_poke_width * 0.5, -mount_depth]) 
+    translate([nose_poke_width * 0.5 - mount_depth, nose_poke_width * 0.5 - wall_thickness, -mount_depth]) 
     difference () {
         cube([mount_depth, mount_thickness, mount_depth]);
         translate([mount_depth * 0.5, mount_thickness+0.1, mount_depth * 0.5]) rotate([90, 0, 0]) cylinder(h=mount_thickness+0.2, d=support_diameter);
@@ -111,22 +114,20 @@ module Angle(nose_poke_angle) {
     }
 }
 
-module CatchBasinOutline(nose_poke_depth, nose_poke_width, wall_thickness, port_size, port_x, port_y, back) {
+module CatchBasinOutline(front_offset, nose_poke_depth, nose_poke_width, wall_thickness, port_size, port_x, port_y, back) {
     hull() {
-        // front lip
-        translate([0, wall_thickness, 0]) scale([1, 1, 0.25]) rotate([90, 0, 0]) cylinder(h=wall_thickness, d=nose_poke_width);
-        
-        // side walls
-        translate([nose_poke_width/2-wall_thickness, 0, 0]) cube(size=[wall_thickness, wall_thickness, nose_poke_depth]);
-        translate([-nose_poke_width/2, 0, 0]) cube(size=[wall_thickness, wall_thickness, nose_poke_depth]);
-        
-        if (back) {
-            echo("here");
-            
+        translate([-nose_poke_width / 2, 0, front_offset]) {
+            // front lip
+            cube(size=[nose_poke_width, wall_thickness, wall_thickness]);
+       
+            // side walls
+            translate([nose_poke_width-wall_thickness, 0, 0]) 
+                cube(size=[wall_thickness, wall_thickness, nose_poke_depth-front_offset]);
+            cube(size=[wall_thickness, wall_thickness, nose_poke_depth-front_offset]);
         }
-        
         // rear outlet
-        translate([port_x, port_y, nose_poke_depth-wall_thickness]) cylinder(h=wall_thickness, d=port_size);
+        translate([port_x, port_y, nose_poke_depth-wall_thickness]) 
+            cylinder(h=wall_thickness, d=port_size);
     }
 }
 
@@ -135,12 +136,11 @@ module Drain(nose_poke_depth, nose_poke_width, wall_thickness) {
     id = 12.7 / 2;
     port_x = nose_poke_width / 2 - od / 2;
     port_y = nose_poke_depth / 2 - wall_thickness;
-    translate([0, 0, -nose_poke_depth])
+    translate([0, 0, -nose_poke_depth]) 
     difference() {
-        CatchBasinOutline(nose_poke_depth, nose_poke_width, wall_thickness, od, port_x, port_y, true);
-        CatchBasinOutline(nose_poke_depth, nose_poke_width-wall_thickness*2, wall_thickness, id, port_x, port_y, false);
-    }
-    
+        CatchBasinOutline(0, nose_poke_depth, nose_poke_width, wall_thickness, od, port_x, port_y, false);
+        #CatchBasinOutline(0, nose_poke_depth, nose_poke_width-wall_thickness, wall_thickness/2, id, port_x, port_y, false);
+    }  
     difference() {
         union() {
             hull() {
@@ -156,17 +156,20 @@ module Drain(nose_poke_depth, nose_poke_width, wall_thickness) {
 // UNITS ARE IN MM
 nose_poke_depth = 35;
 nose_poke_width = 40;
+nose_poke_height = 10;
+
 ir_sensor_depth = 3;
 wall_thickness = 6;
 lick_spout_od = 8;
 lick_spout_id = 3;
-lick_spout_depth = 5;
+lick_spout_depth = 6;
 nose_poke_angle = 15;
 tap_size_quarter_inch = 5.558; // mm
 ir_sensor_width = 3.7;
 
 eps = 0.3;
 support_diameter = 12.7 + eps * 2;
+
 
 Mount(nose_poke_width, support_diameter, wall_thickness, tap_size_quarter_inch);
 translate([0, nose_poke_width/2, 0]) rotate([0, 180, 0]) Drain(nose_poke_depth, nose_poke_width, wall_thickness);
@@ -176,7 +179,7 @@ difference() {
             difference() {
                 union() {
                     MainWall(nose_poke_depth, wall_thickness);
-					Angle(nose_poke_angle) {
+                    translate([0, -nose_poke_height, 0]) Angle(nose_poke_angle) {
                         LickSpout(nose_poke_depth, lick_spout_depth, lick_spout_od, lick_spout_id);
                         hull() {
                             cylinder(h=0.1, d=5);
@@ -185,18 +188,18 @@ difference() {
                     }
                 }
                 // This is a second cylinder to ream out additional issues with lick spout
-                Angle(nose_poke_angle) translate([0, 0, -20]) cylinder(h=nose_poke_depth+20, d=lick_spout_id);
+                Angle(nose_poke_angle) translate([0, -nose_poke_height, -20]) cylinder(h=nose_poke_depth+20, d=lick_spout_id);
                 }
         }
              
-        translate([nose_poke_width/2-0.75, 10, -0.1]) {
+        translate([nose_poke_width/2-0.75, 10-nose_poke_height, -0.1]) {
             rotate([0, 0, 90]) {
                 IRSensorHousing(
                     ir_sensor_height=nose_poke_depth-ir_sensor_depth+0.1, width=ir_sensor_width
                 );
             }
         }
-        translate([-(nose_poke_width/2-0.75), 10, -0.1]) {
+        translate([-(nose_poke_width/2-0.75), 10-nose_poke_height, -0.1]) {
             rotate([0, 0, -90]) {
                 IRSensorHousing(
                     ir_sensor_height=nose_poke_depth-ir_sensor_depth+0.1, width=ir_sensor_width
